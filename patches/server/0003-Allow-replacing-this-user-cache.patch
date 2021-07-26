@@ -1,0 +1,32 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: lukas81298 <lukas81298@gommehd.net>
+Date: Mon, 26 Jul 2021 14:57:26 +0200
+Subject: [PATCH] Allow replacing this user cache
+
+
+diff --git a/src/main/java/net/minecraft/server/MinecraftServer.java b/src/main/java/net/minecraft/server/MinecraftServer.java
+index a826f490bb393f00c330bb7569d068f1f3645c21..8f8c402a8799b0509a57a9f421d348cd9e68eec7 100644
+--- a/src/main/java/net/minecraft/server/MinecraftServer.java
++++ b/src/main/java/net/minecraft/server/MinecraftServer.java
+@@ -259,7 +259,7 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
+     private String resourcePackHash;
+     private volatile boolean isReady;
+     private long lastOverloadWarning;
+-    private final MinecraftSessionService sessionService;
++    private MinecraftSessionService sessionService; // Cheetah - private final -> private
+     @Nullable
+     private final GameProfileRepository profileRepository;
+     @Nullable
+@@ -1970,6 +1970,12 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
+         return this.sessionService;
+     }
+ 
++    // Cheetah start
++    public void setSessionService(MinecraftSessionService sessionService) {
++        this.sessionService = sessionService;
++    }
++    // Cheetah end
++
+     public GameProfileRepository getProfileRepository() {
+         return this.profileRepository;
+     }
