@@ -15,7 +15,7 @@ index b50463c2356301a1b47a0bf4f50dc1f121d363a1..ab818aed7e763f9e8f07bb36daf78ab0
 -    implementation(project(":Paper-API"))
 -    implementation(project(":Paper-MojangAPI"))
 +    implementation(project(":Cheetah-API")) // Cheetah
-+    implementation("com.destroystokyo.paper:paper-mojangapi:1.16.5-R0.1-SNAPSHOT") // Cheetah
++    implementation("io.papermc.paper:paper-mojangapi:1.17.1-R0.1-SNAPSHOT") // Cheetah
      // Paper start
      implementation("org.jline:jline-terminal-jansi:3.12.1")
      implementation("net.minecrell:terminalconsoleappender:1.2.0")
