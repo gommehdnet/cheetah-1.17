@@ -54,7 +54,7 @@ index 61405c2b53e03a4b83e2c70c6e4d3739ca9676cb..90550a915de8c82fbf71d847c2b09d7d
 @@ -68,6 +68,12 @@ public class GameProfileCache {
          Lists.reverse(this.load()).forEach(this::safeAdd);
      }
-
+ 
 +    // Cheetah start
 +    public void setProfileRepository(GameProfileRepository gameProfileRepository) {
 +        this.profileRepository = gameProfileRepository;
@@ -63,4 +63,4 @@ index 61405c2b53e03a4b83e2c70c6e4d3739ca9676cb..90550a915de8c82fbf71d847c2b09d7d
 +
      private void safeAdd(GameProfileCache.GameProfileInfo entry) {
          GameProfile gameprofile = entry.getProfile();
-
+ 

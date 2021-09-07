@@ -1,0 +1,92 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: lukas81298 <lukas81298@gommehd.net>
+Date: Tue, 7 Sep 2021 15:02:10 +0200
+Subject: [PATCH] configurable hopper transfer multiplier
+
+
+diff --git a/src/main/java/net/minecraft/world/level/block/entity/Hopper.java b/src/main/java/net/minecraft/world/level/block/entity/Hopper.java
+index 71dd26ca6626631b94d53818cd06b93f61485369..c99ff945abd552c3aeb244d6e5ec1a3105fbdea5 100644
+--- a/src/main/java/net/minecraft/world/level/block/entity/Hopper.java
++++ b/src/main/java/net/minecraft/world/level/block/entity/Hopper.java
+@@ -23,4 +23,10 @@ public interface Hopper extends Container {
+     double getLevelY();
+ 
+     double getLevelZ();
++
++    // Cheetah start
++    default float getHopperTransferMultiplier() {
++        return 1.0F;
++    }
++    // Cheetah end
+ }
+diff --git a/src/main/java/net/minecraft/world/level/block/entity/HopperBlockEntity.java b/src/main/java/net/minecraft/world/level/block/entity/HopperBlockEntity.java
+index 3b1442bf4c83650369e925d76f07dc67c6cbbc83..c8073cc469644d919d32301797a12c866a5065ea 100644
+--- a/src/main/java/net/minecraft/world/level/block/entity/HopperBlockEntity.java
++++ b/src/main/java/net/minecraft/world/level/block/entity/HopperBlockEntity.java
+@@ -47,6 +47,7 @@ public class HopperBlockEntity extends RandomizableContainerBlockEntity implemen
+     private NonNullList<ItemStack> items;
+     private int cooldownTime;
+     private long tickedGameTime;
++    private float hopperTransferMultiplier = 1.0F; // Cheetah
+ 
+     // CraftBukkit start - add fields and methods
+     public List<HumanEntity> transaction = new java.util.ArrayList<HumanEntity>();
+@@ -78,6 +79,16 @@ public class HopperBlockEntity extends RandomizableContainerBlockEntity implemen
+     }
+     // CraftBukkit end
+ 
++    // Cheetah start
++    public float getHopperTransferMultiplier() {
++        return hopperTransferMultiplier;
++    }
++
++    public void setHopperTransferMultiplier(float hopperTransferMultiplier) {
++        this.hopperTransferMultiplier = hopperTransferMultiplier;
++    }
++    // Cheetah end
++
+     public HopperBlockEntity(BlockPos pos, BlockState state) {
+         super(BlockEntityType.HOPPER, pos, state);
+         this.items = NonNullList.withSize(5, ItemStack.EMPTY);
+@@ -93,6 +104,11 @@ public class HopperBlockEntity extends RandomizableContainerBlockEntity implemen
+         }
+ 
+         this.cooldownTime = nbt.getInt("TransferCooldown");
++        // Cheetah start
++        if(nbt.contains("TransferMultiplier")) {
++            this.hopperTransferMultiplier = nbt.getFloat( "TransferMultiplier");
++        }
++        // Cheetah end
+     }
+ 
+     @Override
+@@ -103,6 +119,11 @@ public class HopperBlockEntity extends RandomizableContainerBlockEntity implemen
+         }
+ 
+         nbt.putInt("TransferCooldown", this.cooldownTime);
++        // Cheetah start
++        if(this.hopperTransferMultiplier != 1.0F) {
++            nbt.putFloat("TransferMultiplier", this.hopperTransferMultiplier);
++        }
++        // Cheetah end
+         return nbt;
+     }
+ 
+@@ -206,7 +227,7 @@ public class HopperBlockEntity extends RandomizableContainerBlockEntity implemen
+                 ItemStack itemstack = origItemStack;
+ 
+                 final int origCount = origItemStack.getCount();
+-                final int moved = Math.min(level.spigotConfig.hopperAmount, origCount);
++                final int moved = Math.min((int)(level.spigotConfig.hopperAmount * hopper.hopperTransferMultiplier), origCount); // Cheetah
+                 origItemStack.setCount(moved);
+ 
+                 // We only need to fire the event once to give protection plugins a chance to cancel this event
+@@ -243,7 +264,7 @@ public class HopperBlockEntity extends RandomizableContainerBlockEntity implemen
+         ItemStack itemstack = origItemStack;
+         final int origCount = origItemStack.getCount();
+         final Level world = ihopper.getLevel();
+-        final int moved = Math.min(world.spigotConfig.hopperAmount, origCount);
++        final int moved = Math.min((int)(world.spigotConfig.hopperAmount * ihopper.getHopperTransferMultiplier()), origCount); // Cheetah
+         itemstack.setCount(moved);
+ 
+         if (!skipPullModeEventFire) {
