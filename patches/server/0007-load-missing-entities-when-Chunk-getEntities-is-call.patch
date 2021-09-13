@@ -1,0 +1,98 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: lukas81298 <lukas81298@gommehd.net>
+Date: Mon, 13 Sep 2021 23:41:56 +0200
+Subject: [PATCH] load missing entities when Chunk#getEntities() is called
+
+
+diff --git a/src/main/java/net/minecraft/world/level/entity/PersistentEntitySectionManager.java b/src/main/java/net/minecraft/world/level/entity/PersistentEntitySectionManager.java
+index d1428fe87ec3be070d9a125a1774ea758d4cd74b..9ca6231697a61b873278d95ccc9b11827cab5c01 100644
+--- a/src/main/java/net/minecraft/world/level/entity/PersistentEntitySectionManager.java
++++ b/src/main/java/net/minecraft/world/level/entity/PersistentEntitySectionManager.java
+@@ -257,7 +257,7 @@ public class PersistentEntitySectionManager<T extends EntityAccess> implements A
+         });
+     }
+ 
+-    private void processPendingLoads() {
++    public void processPendingLoads() { // Cheetah - private -> public
+         ChunkEntities<T> chunkEntities;
+         while((chunkEntities = this.loadingInbox.poll()) != null) {
+             chunkEntities.getEntities().forEach((entity) -> {
+diff --git a/src/main/java/org/bukkit/craftbukkit/CraftChunk.java b/src/main/java/org/bukkit/craftbukkit/CraftChunk.java
+index 40d6dfe30e8f388fb2014ba81f9ea4a986354b88..711a919242d64e502c2520228da2669a98b1317b 100644
+--- a/src/main/java/org/bukkit/craftbukkit/CraftChunk.java
++++ b/src/main/java/org/bukkit/craftbukkit/CraftChunk.java
+@@ -3,16 +3,15 @@ package org.bukkit.craftbukkit;
+ import com.google.common.base.Preconditions;
+ import com.google.common.base.Predicates;
+ import java.lang.ref.WeakReference;
+-import java.util.ArrayList;
+-import java.util.Arrays;
+-import java.util.Collection;
+-import java.util.List;
++import java.util.*;
++import java.util.function.BooleanSupplier;
+ import java.util.function.Predicate;
+ import net.minecraft.core.BlockPos;
+ import net.minecraft.core.Registry;
+ import net.minecraft.core.SectionPos;
+ import net.minecraft.nbt.CompoundTag;
+ import net.minecraft.nbt.NbtUtils;
++import net.minecraft.server.MinecraftServer;
+ import net.minecraft.server.level.ServerLevel;
+ import net.minecraft.world.level.ChunkPos;
+ import net.minecraft.world.level.LightLayer;
+@@ -24,9 +23,12 @@ import net.minecraft.world.level.chunk.ChunkStatus;
+ import net.minecraft.world.level.chunk.DataLayer;
+ import net.minecraft.world.level.chunk.LevelChunkSection;
+ import net.minecraft.world.level.chunk.PalettedContainer;
++import net.minecraft.world.level.entity.PersistentEntitySectionManager;
++import net.minecraft.world.level.entity.Visibility;
+ import net.minecraft.world.level.levelgen.Heightmap;
+ import net.minecraft.world.level.levelgen.WorldgenRandom;
+ import net.minecraft.world.level.lighting.LevelLightEngine;
++import net.minecraft.world.phys.AABB;
+ import org.bukkit.Chunk;
+ import org.bukkit.ChunkSnapshot;
+ import org.bukkit.Location;
+@@ -110,6 +112,13 @@ public class CraftChunk implements Chunk {
+             this.getWorld().getChunkAt(x, z); // Transient load for this tick
+         }
+ 
++        // Cheetah Start
++        long pair = ChunkPos.asLong(x, z);
++        if (!this.worldServer.entityManager.areEntitiesLoaded(pair)) {
++            awaitEntityLoading(pair, this.worldServer.entityManager);
++        }
++        // Cheetah end
++
+         // Paper start - improve CraftChunk#getEntities
+         return this.worldServer.entityManager.sectionStorage.getExistingSectionsInChunk(ChunkPos.asLong(this.x, this.z))
+             .flatMap(net.minecraft.world.level.entity.EntitySection::getEntities)
+@@ -119,6 +128,27 @@ public class CraftChunk implements Chunk {
+         // Paper end
+     }
+ 
++    // Cheetah start
++    private void awaitEntityLoading(long pair, PersistentEntitySectionManager<net.minecraft.world.entity.Entity> entityManager) {
++        entityManager.updateChunkStatus(new ChunkPos(pair), Visibility.TICKING); // Start entity loading
++
++        MinecraftServer.getServer().managedBlock(new BooleanSupplier() {
++            @Override
++            public boolean getAsBoolean() {
++                boolean status = entityManager.areEntitiesLoaded(pair);
++                // only execute inbox if our entities are not present
++                if (status) {
++                    return true;
++                }
++                // process entity load queue
++                entityManager.processPendingLoads();
++                // check if our entities are now loaded
++                return entityManager.areEntitiesLoaded(pair);
++            }
++        });
++    }
++    // Cheetah end
++
+     @Override
+     public BlockState[] getTileEntities() {
+         // Paper start
