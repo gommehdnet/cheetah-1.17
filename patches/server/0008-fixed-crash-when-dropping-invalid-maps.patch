@@ -1,0 +1,23 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: lukas81298 <lukas81298@gommehd.net>
+Date: Sun, 19 Sep 2021 01:25:46 +0200
+Subject: [PATCH] fixed crash when dropping invalid maps
+
+
+diff --git a/src/main/java/net/minecraft/world/entity/player/Player.java b/src/main/java/net/minecraft/world/entity/player/Player.java
+index 19980b2d627eb3cacf8d0c3e6785ad2206910fbc..716d8fc0d90d905c1fab12ceae474b38c9aa282d 100644
+--- a/src/main/java/net/minecraft/world/entity/player/Player.java
++++ b/src/main/java/net/minecraft/world/entity/player/Player.java
+@@ -762,7 +762,11 @@ public abstract class Player extends LivingEntity {
+             // Paper start - remove player from map on drop
+             if (stack.getItem() == Items.FILLED_MAP) {
+                 MapItemSavedData worldmap = MapItem.getSavedData(stack, this.level);
+-                worldmap.tickCarriedBy(this, stack);
++                // Cheetah start - fix crash for invalid map items
++                if(worldmap != null) {
++                    worldmap.tickCarriedBy(this, stack);
++                }
++                // Cheetah end
+             }
+             // Paper end
+ 
