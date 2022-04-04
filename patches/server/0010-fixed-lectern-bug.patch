@@ -1,0 +1,50 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: lukas81298 <lukas81298@gommehd.net>
+Date: Mon, 4 Apr 2022 23:03:59 +0200
+Subject: [PATCH] fixed lectern bug
+
+
+diff --git a/src/main/java/net/minecraft/stats/ServerRecipeBook.java b/src/main/java/net/minecraft/stats/ServerRecipeBook.java
+index 63a4fa2408edf84b490ca39e824977135d78eff0..a60d56f34aaf372257f246d08a6a4a35e2b10fb4 100644
+--- a/src/main/java/net/minecraft/stats/ServerRecipeBook.java
++++ b/src/main/java/net/minecraft/stats/ServerRecipeBook.java
+@@ -127,7 +127,7 @@ public class ServerRecipeBook extends RecipeBook {
+                     handler.accept((Recipe) optional.get());
+                 }
+             } catch (ResourceLocationException resourcekeyinvalidexception) {
+-                ServerRecipeBook.LOGGER.error("Tried to load improperly formatted recipe: {} removed now.", s);
++                ServerRecipeBook.LOGGER.error("Tried to load improperly format ted recipe: {} removed now.", s);
+             }
+         }
+ 
+diff --git a/src/main/java/net/minecraft/world/entity/player/Player.java b/src/main/java/net/minecraft/world/entity/player/Player.java
+index 716d8fc0d90d905c1fab12ceae474b38c9aa282d..2a8df1c62315e66b497f9773e5559f743d9bf939 100644
+--- a/src/main/java/net/minecraft/world/entity/player/Player.java
++++ b/src/main/java/net/minecraft/world/entity/player/Player.java
+@@ -2192,7 +2192,7 @@ public abstract class Player extends LivingEntity {
+     }
+ 
+     public boolean canUseGameMasterBlocks() {
+-        return this.abilities.instabuild && this.getPermissionLevel() >= 2;
++        return (this.abilities.instabuild && this.getPermissionLevel() >= 2) || getBukkitEntity().hasPermission("minecraft.canusemasterblocks"); // Cheetah
+     }
+ 
+     @Override
+diff --git a/src/main/java/net/minecraft/world/inventory/LecternMenu.java b/src/main/java/net/minecraft/world/inventory/LecternMenu.java
+index ff79925bc6437222f9ceb133e21bbc0600cc74ed..fbaea470030e44ed90705fa40c2d426e289c3c9c 100644
+--- a/src/main/java/net/minecraft/world/inventory/LecternMenu.java
++++ b/src/main/java/net/minecraft/world/inventory/LecternMenu.java
+@@ -126,6 +126,13 @@ public class LecternMenu extends AbstractContainerMenu {
+         this.broadcastChanges();
+     }
+ 
++    // Paper start
++    @Override
++    public ItemStack quickMoveStack(net.minecraft.world.entity.player.Player player, int index) {
++        return ItemStack.EMPTY;
++    }
++    // Paper end
++
+     @Override
+     public boolean stillValid(net.minecraft.world.entity.player.Player player) {
+         if (this.lectern instanceof LecternInventory && !((LecternInventory) this.lectern).getLectern().hasBook()) return false; // CraftBukkit

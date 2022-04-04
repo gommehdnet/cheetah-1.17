@@ -8,6 +8,7 @@ This is a fork of PaperSpigot tailored for the use at GommeHD.net
 - Run `./gradlew applyPatches` to apply the patches
 - Run `./gradlew build` to build the jar files
 - Run `./gradlew shadowJar` to create the final jar file
+- Run `./gradlew reobfJar` to create the final jar file
 - The final jar file can be found in `Cheetah-Server/build/libs/Cheetah-Server-reobf.jar`
 
 ## How to use the API with Maven?
